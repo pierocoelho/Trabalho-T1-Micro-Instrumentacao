@@ -7,15 +7,9 @@
 #define IN2_PIN 2
 #define SENSOR_PIN 26
 
-// Níveis de velocidade do PWM (0 a 65535)
-#define VELOCIDADE_0 0
-#define VELOCIDADE_1 21626 // ~33%
-#define VELOCIDADE_2 32768 // ~50%
-#define VELOCIDADE_3 65535 // 100%
-
-// Constantes de tempo do limpador
-#define TEMPO_VOLTA_MS 100     // Dedução: tempo para 1 volta física
-#define INTERVALO_PAUSA_MS 2000 // Pausa de 2 s
+// Parâmetros de funcionamento
+#define VELOCIDADE_TRABALHO 32768 // 50% do PWM
+#define TEMPO_VOLTA_MS 500       // Tempo para 1 volta física
 
 int main() {
     const uint LED_PIN = PICO_DEFAULT_LED_PIN;
@@ -41,52 +35,51 @@ int main() {
     gpio_put(IN1_PIN, 1);
     gpio_put(IN2_PIN, 0);
 
-    // Variáveis de controle de estado de tempo
+    // Variáveis de tempo e estado
     uint32_t ultimo_acionamento = 0;
     bool limpador_ativo = false;
 
     while (true) {
         uint16_t leitura_adc = adc_read();
-        uint32_t velocidade = VELOCIDADE_0;
         uint32_t tempo_atual = to_ms_since_boot(get_absolute_time());
+        uint32_t velocidade = 0;
+        int pausa_alvo = -1; // -1 indica estado desligado
 
-        if (leitura_adc <= 3102 && leitura_adc > 2233) {
-            // Entre 2.5 V e 1.8 V
-            velocidade = VELOCIDADE_0;
-            limpador_ativo = false;
+        // Determina o tempo de pausa com base na leitura analógica
+        if (leitura_adc <= 3723 && leitura_adc > 2233) {
+            pausa_alvo = -1; // Entre 3.0 V e 1.8 V (Desligado)
         } else if (leitura_adc <= 2233 && leitura_adc > 1613) {
-            // Entre 1.8 V e 1.3 V (Ciclo do Limpador)
-            if (!limpador_ativo && (tempo_atual - ultimo_acionamento >= INTERVALO_PAUSA_MS)) {
+            pausa_alvo = 4000; // Nível 1: 4 s de pausa
+        } else if (leitura_adc <= 1613 && leitura_adc > 1116) {
+            pausa_alvo = 2000; // Nível 2: 2 s de pausa
+        } else if (leitura_adc <= 1116) {
+            pausa_alvo = 0;    // Nível 3: Contínuo
+        }
+
+        // Lógica de atuação do limpador
+        if (pausa_alvo == -1) {
+            velocidade = 0;
+            limpador_ativo = false;
+        } else {
+            // Verifica se é hora de iniciar um novo ciclo
+            if (!limpador_ativo && (tempo_atual - ultimo_acionamento >= pausa_alvo)) {
                 limpador_ativo = true;
                 ultimo_acionamento = tempo_atual;
             }
 
+            // Mantém o motor ligado até completar a volta
             if (limpador_ativo) {
                 if (tempo_atual - ultimo_acionamento < TEMPO_VOLTA_MS) {
-                    velocidade = VELOCIDADE_3; // Acionamento para vencer o atrito e girar
+                    velocidade = VELOCIDADE_TRABALHO;
                 } else {
                     limpador_ativo = false;
-                    velocidade = VELOCIDADE_0;
-                    ultimo_acionamento = tempo_atual; // Inicia a contagem de pausa
+                    velocidade = 0;
+                    ultimo_acionamento = tempo_atual; // Reinicia a contagem para a próxima pausa
                 }
-            } else {
-                velocidade = VELOCIDADE_0;
             }
-        } else if (leitura_adc <= 1613 && leitura_adc > 1116) {
-            // Entre 1.3 V e 0.9 V
-            velocidade = VELOCIDADE_2;
-            limpador_ativo = false;
-        } else if (leitura_adc <= 1116) {
-            // Entre 0.9 V e 0 V
-            velocidade = VELOCIDADE_3;
-            limpador_ativo = false;
-        } else {
-            // Acima de 2.5 V
-            velocidade = VELOCIDADE_0;
-            limpador_ativo = false;
         }
 
         pwm_set_chan_level(slice_num, channel, velocidade);
-        sleep_ms(10); // Loop em alta frequência para estabilidade de tempo
+        sleep_ms(10);
     }
 }
