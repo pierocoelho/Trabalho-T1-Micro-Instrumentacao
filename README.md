@@ -167,11 +167,11 @@ Contém todos os arquivos utilizados para o desenvolvimento e fabricação das p
 ## Pasta SolidWorks
 Reúne todos os arquivos CAD utilizados na modelagem da estrutura mecânica impressa em 3D, permitindo a reprodução ou futuras modificações do protótipo.
 
-Apresentação Sensor de Chuva (.pptx)
+##Apresentação Sensor de Chuva (.pdf)
 Arquivo utilizado na apresentação final do projeto, contendo as explicações do funcionamento do sistema, diagramas, resultados experimentais e as atualizações realizadas após as sugestões dos professores.
 
-Experimental Excel & Porcentagem de Umidade (.xlsx)
+##Experimental Excel & Porcentagem de Umidade (.xlsx)
 Planilha contendo todos os dados experimentais obtidos durante a calibração do sensor, incluindo as medições de tensão, conversão para porcentagem de umidade e os cálculos utilizados para definir os níveis de funcionamento do sistema. O procedimento de coleta dos dados encontra-se registrado em vídeo na pasta Fotos/Vídeos.
 
-Relatório Técnico (.pdf)
+##Relatório Técnico (.pdf)
 Relatório completo do projeto, apresentando a fundamentação teórica, metodologia, resultados experimentais, discussão e conclusões.
