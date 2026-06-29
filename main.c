@@ -19,7 +19,7 @@
 
 // --- Parâmetros de Funcionamento ---
 #define VELOCIDADE_TRABALHO 32768 // 50% do PWM
-#define TEMPO_VOLTA_MS 500       // Tempo de 0,5 s para 1 volta física
+#define TEMPO_VOLTA_MS 270       // Tempo de 0,27 s para 1 volta física
 
 // --- Funções do LCD ---
 void lcd_pulse_enable() {
